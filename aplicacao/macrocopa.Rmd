@@ -1,0 +1,103 @@
+---
+title: "Painel Macroeconômico dos Países"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+
+# Carregar pacotes
+library(flexdashboard)
+library(readr)
+library(highcharter)
+library(tidyverse)
+library(shinyWidgets)
+
+# Carregar dados
+dados <- readr::read_csv(file = '../dados/dados.csv')
+```
+
+Column {.sidebar} 
+-----------------------------------------------------------------------
+
+Monitor Macroeconômico dos países do [Instituto Mauro Borges de Pesquisa e Política Econômica (IMB)](https://goias.gov.br/imb/) do Governo de Goiás. Dataset do World Bank.
+
+```{r}
+# Botão de selecionar países
+shinyWidgets::pickerInput(
+  inputId = 'pais',
+  label = 'Selecione os países:',
+  choices = sort(unique(dados$pais)),
+  selected = c('Brazil', 'Argentina'),
+  multiple = TRUE,
+  options = list("max-options" = 2)
+)
+
+# Botão de selecionar variável
+shinyWidgets::pickerInput(
+  inputId = 'variavel',
+  label = 'Selecione a variável:',
+  choices = sort(unique(dados$variavel)),
+  selected = "PIB (cres. anual, %)",
+  multiple = FALSE
+)
+
+# Botão de selecionar tipo de gráfico
+shinyWidgets::radioGroupButtons(
+   inputId = "grafico",
+   label = "Selecione o tipo de gráfico:", 
+   choices = c("Linha" = "line", "Coluna" = "Column", "Área" = "area"),
+   selected = 'line'
+)
+```
+Última atualização: `r format(max(dados$atualizacao), format = '%d/%m/%Y')`.
+
+Elaboração: [João Kleber Estácio de Lima](https://buscatextual.cnpq.br/buscatextual/visualizacv.do?id=K1122102E3&tokenCaptchar=03AFcWeA6Mad4SILTbxDTZh7hrnA5W9pwe5CavBreGgwweIzN7OVKVIbdD3eaydjHyvAtsWEyFJuE82sU4a8lqZHZA2bcZ-Il1c_LsTXlE2z6b2etlDdoVx9KrthAu3uF8jKkkSKIvsJpv3wjwUNxyyFbJJQAFRNXERb-0jp0iG2k2tzlaz4EAmyvNbgZJeJVQ4Qs0zWXJuujb68QeK_LEJ0TS6dZn7AH8Tl8TokNZdP4854lXwKZlNwvb3R3i6yw_MoEJhtvaXRtq7x5pgs1S9D4ch-LJBEVLWciz5qhZxFs86UDXSNDp1N_2vudJvBLjVlh0AcXonCRJGJrP-mVSclnGSIgTEGXMaoLxKUQOFwR9qopBCfpmHa93iSKPEcPBYg2qBlcojbzZe0AVf6zBECYDQ4qi9emEtZJxulGRqAuFiCkBq28sME2KAWpEN8xDqFqJwUkZQeZNLujh44iFxgd-fjmGmTJ2e8EwIBoPJMC9GWx_v15E1gftRhrJgaQ5yMv59TacUHrSk3wZmDAttfDLb3kjV5o_e7vsMKhTL3J6NXnnLtkXF7CZcUbbXym4MDjsi3zTz5BhDaZSTeK41vdc7ziioPh_Pit96uTOovSH0dMKKvTcS5Jw1KzuYZOGTv6W-Fj71A8Dh-dJhI6MN2rRmqEFh0xBA8ZKL5Ci2Uhmf_CW26rURF8l3liEi-IZY9P0ZSkmppU49bJVBESaQO9chFqScXeez1D8ktfRpNAXUbC3lMZQrbzrgGJRxROnSdQ-BXbEHDVZHeixjIgNQNu326a8HGnt07swGrft62G7Z_hQf3SuZxo-1Yw3Vaul7sCQ4EvBVIYYLCtTFtOi4Uv67wL-QYm1MBhJnrTOApKC5NFsJ9-lYC34WrulKyYV5dA2DDnJTy4ahWX5acfzU5qIulJyqGdxOhPmpcY2VryhOPG4n92oxn4) (Gerente de Estudos Econômicos do IMB/SGG).
+
+
+Column 
+-----------------------------------------------------------------------
+
+### Primeiro país {.no-title}
+
+```{r}
+highcharter::renderHighchart({
+  
+  shiny::req(input$pais[1], input$variavel, input$grafico)
+  
+  dados %>% 
+    dplyr::filter(pais == input$pais[1], variavel == input$variavel) %>%
+    highcharter::hchart(type = input$grafico, highcharter::hcaes(x = data, y = valor )) %>% 
+    highcharter::hc_navigator(enabled = TRUE) %>% 
+    highcharter::hc_title(text = paste0(input$pais[1], "-", input$variavel))
+})
+
+  
+  
+```
+
+Column
+-----------------------------------------------------------------------
+
+### Segundo país{.no-title}
+
+```{r}
+
+highcharter::renderHighchart({
+  
+  shiny::req(input$pais[2], input$variavel, input$grafico)
+  
+  dados %>% 
+    dplyr::filter(pais == input$pais[2], variavel == input$variavel) %>%
+    highcharter::hchart(type = input$grafico, highcharter::hcaes(x = data, y = valor )) %>% 
+    highcharter::hc_navigator(enabled = TRUE) %>% 
+    highcharter::hc_title(text = paste0(input$pais[2], "-", input$variavel))
+})
+
+  
+  
+```
+
